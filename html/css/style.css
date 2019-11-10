@@ -1,0 +1,240 @@
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+.row::after {
+	content: "";
+	clear: both;
+	display: table;
+}
+
+[class*="col-"] {
+	float: left;
+	padding: 15px;
+}
+
+html {
+	font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+	background: #f2f2f2;
+}
+
+h1 {
+	font-weight: normal;
+}
+
+h2 {
+	font-weight: normal;
+}
+
+h3 {
+	font-weight: normal;
+}
+
+a {
+	color: #33b5e5;
+	text-decoration: none;
+}
+
+a:hover {
+	color: #0099cc;
+}
+
+button {
+	background: #f2f2f2;
+	border: 2px solid #33b5e5;
+	border-radius: 4px;
+}
+
+button a {
+	padding: 8px 15px;
+	font-size: 16px;
+	color: black;
+	text-decoration: none;
+	display: block;
+}
+
+button a:hover {
+	color: white;
+	background: #33b5e5;
+}
+
+.center {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+	width: 50%;
+}
+
+.header {
+	margin: 0 15px 0 15px;
+	border-bottom: 1px solid #ccc;
+}
+
+.header .banner {
+	background: #f2f2f2;
+}
+
+.header .banner p {
+	color: #b30000;
+	font-size: 48px;
+	line-height: 2.5;
+	display: inline-block;
+	text-shadow: 1px 2px 2px rgba(0,0,0,0.24);
+}
+
+.header .account {
+	text-align: center;
+	height: 100%;
+	display: none;
+}
+
+.header .accountlinks {
+	margin: 15px;
+	float: right;
+}
+
+.header .account a {
+	color: black;
+	text-align: center;
+	text-decoration: none;
+	display: block;
+}
+
+.header .account a.icon {
+	font-size: 48px;
+}
+
+.header .account a:hover {
+	color: #b30000;
+}
+
+.menu a {
+	padding: 14px 16px;
+	color: black;
+	text-decoration: none;
+	display: block;
+}
+
+.menu a:hover {
+	background: #ccc;
+}
+
+.menu .active {
+	background: #33b5e5;
+	color: white;
+}
+
+.menu a.active:hover {
+	background: #0099cc;
+}
+
+.menuheader {
+	padding-bottom: 15px;
+	padding-left: 15px;
+	font-size: 24px;
+	border-bottom: 1px solid #ccc;
+	display: none;
+}
+
+.scrollmenu {
+	display: none;
+}
+
+.menuitems {
+	border-top: 1px solid #ccc;
+	border-bottom: 1px solid #ccc;
+}
+
+.data {
+	padding-left: 15px;
+}
+
+.data h1 {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.data h2 {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.data h3 {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.data ul {
+	margin-left: 30px;
+	font-size: 14px;
+}
+
+.aside {
+	background: #33b5e5;
+	padding: 15px;
+	color: white;
+	text-align: center;
+	font-size: 14px;
+	border-radius: 4px;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+}
+
+.footer {
+	padding: 15px;
+	color: #888;
+	text-align: center;
+	font-size: 12px;
+	border-top: 1px solid #ccc;
+}
+
+.footnote {
+	color: #888;
+	font-size: 10px;
+	text-align: right;
+}
+
+/* For mobile phones: */
+[class*="col-"] {
+	width: 100%;
+}
+
+@media only screen and (min-width: 600px) {
+	/* For tablets: */
+	.col-s-1 {width: 8.33%;}
+	.col-s-2 {width: 16.66%;}
+	.col-s-3 {width: 25%;}
+	.col-s-4 {width: 33.33%;}
+	.col-s-5 {width: 41.66%;}
+	.col-s-6 {width: 50%;}
+	.col-s-7 {width: 58.33%;}
+	.col-s-8 {width: 66.66%;}
+	.col-s-9 {width: 75%;}
+	.col-s-10 {width: 83.33%;}
+	.col-s-11 {width: 91.66%;}
+	.col-s-12 {width: 100%;}
+}
+
+@media only screen and (min-width: 768px) {
+	/* For desktop: */
+	.mobile {display: none;}
+	.header .account {display: inline;}
+	.menu {margin: 0;padding: 15px 0 15px 15px;border-right: 1px solid #ccc;}
+	.mobileexpand {display: none;}
+	.menuheader {display: block;}
+	.scrollmenu {display: inline;}
+	.menuitems {border: none;height: 60vh;overflow: scroll;}
+	.col-1 {width: 8.33%;}
+	.col-2 {width: 16.66%;}
+	.col-3 {width: 25%;}
+	.col-4 {width: 33.33%;}
+	.col-5 {width: 41.66%;}
+	.col-6 {width: 50%;}
+	.col-7 {width: 58.33%;}
+	.col-8 {width: 66.66%;}
+	.col-9 {width: 75%;}
+	.col-10 {width: 83.33%;}
+	.col-11 {width: 91.66%;}
+	.col-12 {width: 100%;}
+}

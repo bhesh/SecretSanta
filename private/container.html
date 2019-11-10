@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="stylesheet" href="fontawesome/5.11.2/css/all.css"/>
+<link rel="stylesheet" href="css/topnav.css"/>
+<link rel="stylesheet" href="css/style.css"/>
+<link rel="javascript" href="js/navigation.js"/>
+%%resources%%
+</head>
+<body onresize="navShow()">
+
+<div class="topnav">
+	<div class="mobilenav">
+		<a href="javascript:void(0);" class="icon" onclick="navExpand()">
+			<i class="fa fa-bars"></i>
+		</a>
+		<a href="index.html" id="logo">
+			<i class="fas fa-gift"></i>
+		</a>
+	</div>
+	<div id="desktopNavLinks">
+		%%desktopNavLinks%%
+	</div>
+	<div id="navLinks">
+		%%navLinks%%
+	</div>
+</div>
+
+<div class="header">
+	<div class="row">
+		<div class="col-11 col-s-10 banner">
+			<p>Secret Santa <i class="fas fa-gift"></i> <font size="2px">Hession Edition</font></p>
+		</div>
+		<div class="col-1 col-s-2 account">
+			<div class="accountlinks">
+				%%accountlinks%%
+			</div>
+		</div>
+	</div>
+</div>
+%%row%%
+<div class="footer">
+	<p>Hession Secret Santa is dedicated to making the holidays easy and stress free. While using this site, you agree to have read and accepted out terms of use, cookie, and private policy. Copyright 2019 by Brian Hession. All Rights Reserved.
+</div>
+</body>
+</html>
