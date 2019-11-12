@@ -7,7 +7,7 @@
 #
 
 from env import *
-import os, sys
+import os, sys, cgi, urllib.parse
 from http import HTTPStatus
 import sshtml
 
@@ -16,6 +16,26 @@ def is_get():
 
 def is_post():
 	return os.environ.get('REQUEST_METHOD', '') == 'POST'
+
+def get_parameters():
+	return cgi.FieldStorage()
+
+def encode(data):
+	return urllib.parse.quote_plus(str(data), safe='')
+
+def decode(data):
+	return urllib.parse.unquote_plus(str(data))
+
+def build_uri(uri, parameters={}):
+	paramstr = ''
+	if len(parameters) > 0:
+		paramstr = '?' + '&'.join(['{}={}'.format(k, encode(parameters[k])) for k in parameters.keys()])
+	return uri + paramstr
+
+def build_redirect_uri(uri, redirect=None):
+	if redirect:
+		return build_uri(uri, {'redirect' : redirect})
+	return uri
 
 def has_cookies():
 	return 'HTTP_COOKIE' in os.environ
@@ -26,6 +46,11 @@ def has_referer():
 def get_referer():
 	if has_referer():
 		return os.environ['HTTP_REFERER']
+	return None
+
+def get_redirect():
+	if 'redirect' in get_parameters():
+		return get_parameters().getvalue('redirect')
 	return None
 
 def has_cookie():
@@ -62,15 +87,14 @@ def sendresponse(code, content_type, headers={}, body=None):
 		print(body)
 
 def senderror(code):
-	sendresponse(code, 'text/html', body=sshtml.buildPage('error.html'))
+	sendresponse(code, 'text/html', body=sshtml.buildError(code))
 
 def send200(html, headers={}):
 	sendresponse(200, 'text/html', headers, html)
 
-def send302(location, referer=None, headers={}):
+def send302(location, redirect=None, headers={}):
 	sendheaders = headers
-	if referer:
-		sendheaders['Referer'] = referer
+	sendheaders['Location'] = build_redirect_uri(location, redirect)
 	sendresponse(302, 'text/html', sendheaders, sshtml.REDIRECT_HTML)
 
 if __name__ == '__main__':

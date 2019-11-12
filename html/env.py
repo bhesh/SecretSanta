@@ -12,5 +12,4 @@ sys.path.insert(1, '.')
 DOC_BASE = '.'
 HTML_RES = '.'
 DATABASE = 'test.db'
-LOG_FILE = 'secretsanta.log'
 

@@ -22,6 +22,7 @@ GROUPMEMBERSHIP_SCHEMA = ssdb.SSTableSchema('groupMembership')
 GROUPMEMBERSHIP_SCHEMA.add_column(ssdb.SSColumnSchema('uid', 'integer', ('NOT NULL',)))
 GROUPMEMBERSHIP_SCHEMA.add_column(ssdb.SSColumnSchema('gid', 'integer', ('NOT NULL',)))
 GROUPMEMBERSHIP_SCHEMA.add_column(ssdb.SSColumnSchema('level', 'integer', ('NOT NULL',)))
+GROUPMEMBERSHIP_SCHEMA.add_column(ssdb.SSColumnSchema('partner', 'integer'))
 
 # Levels
 GENERAL = 0
@@ -58,18 +59,6 @@ class SSGroups(object):
 			raise Error('returned more than one group')
 		return res[0]
 
-	def get_group_by_name(self, name, cols=None):
-		columns = '*'
-		if cols:
-			columns = ','.join(cols)
-		statement = 'SELECT {} FROM {} WHERE name=?'.format(columns, GROUPS_SCHEMA.name)
-		res = self.db.execute_prepared(statement, name)
-		if len(res) == 0:
-			return None
-		if len(res) > 1:
-			raise Error('returned more than one group')
-		return res[0]
-
 	def get_all_group_memberships(self):
 		statement = 'SELECT * FROM {}'.format(GROUPMEMBERSHIP_SCHEMA.name)
 		return self.db.execute(statement)
@@ -89,17 +78,10 @@ class SSGroups(object):
 		return self.db.execute_prepared(statement, gid)
 
 	def create_group(self, uid, name):
-		res = self.get_group_by_name(name, ['id'])
-		if res:
-			return False
-		statement1 = 'INSERT INTO {} (name) VALUES (?)'.format(GROUPS_SCHEMA.name)
-		statement2 = 'INSERT INTO {} (uid,gid,level) VALUES (?,?,?)'.format(GROUPMEMBERSHIP_SCHEMA.name)
-		self.db.execute_prepared(statement1, name)
-		group = self.get_group_by_name(name, ['id'])
-		if not group:
-			raise Error('group does not exist')
-		self.db.execute_prepared(statement2, uid, group[0], ADMIN)
-		return True
+		statement = 'INSERT INTO {} (uid,gid,level) VALUES (?,?,?)'.format(GROUPMEMBERSHIP_SCHEMA.name)
+		gid = self.db.insert_and_retrieve(GROUPS_SCHEMA.name, {'name' : name})
+		self.db.execute_prepared(statement, uid, gid, ADMIN)
+		return gid
 
 	def delete_group(self, gid):
 		statement1 = 'DELETE FROM {} WHERE id=?'.format(GROUPS_SCHEMA.name)
@@ -108,16 +90,37 @@ class SSGroups(object):
 		self.db.execute_prepared(statement2, gid)
 
 	def get_membership_level(self, gid, uid):
-		res = self.get_group_by_id(gid, ['id'])
-		if not res:
-			raise Error('group does not exist')
 		statement = 'SELECT level FROM {} WHERE uid=? AND gid=?'.format(GROUPMEMBERSHIP_SCHEMA.name)
 		res = self.db.execute_prepared(statement, uid, gid)
 		if len(res) == 0:
 			return None
 		if len(res) > 1:
 			raise Error('returned more than one membership')
-		return res[0]
+		return int(res[0][0])
+
+	def set_partner(self, gid, uid, partner):
+		statement = 'UPDATE {} SET partner=? WHERE uid=? AND gid=?'.format(GROUPMEMBERSHIP_SCHEMA.name)
+		self.db.execute_prepared(statement, partner, uid, gid)
+
+	def set_partners(self, gid, assignment):
+		"""assignment = dict({ user : partner })"""
+		search_data = list()
+		update_data = list()
+		for u in assignment.keys():
+			search_data.append({'uid' : u, 'gid' : gid})
+			update_data.append({'partner' : assignment[u]})
+		self.db.batch_update(GROUPMEMBERSHIP_SCHEMA.name, search_data, update_data)
+
+	def get_partner(self, gid, uid):
+		statement = 'SELECT partner FROM {} WHERE uid=? AND gid=?'.format(GROUPMEMBERSHIP_SCHEMA.name)
+		res = self.db.execute_prepared(statement, uid, gid)
+		if len(res) == 0:
+			return None
+		if len(res) > 1:
+			raise Error('returned more than one membership')
+		if res[0][0]:
+			return int(res[0][0])
+		return None
 
 	def add_member(self, gid, uid, level=GENERAL):
 		if self.get_membership_level(gid, uid) == None:
@@ -136,6 +139,8 @@ if __name__ == '__main__':
 	print('='*80)
 	print('Create database/tables')
 	print('='*80)
+	print(GROUPS_SCHEMA)
+	print(GROUPMEMBERSHIP_SCHEMA)
 	groups = SSGroups(DATABASE)
 	print('='*80)
 	print('Drop tables')
@@ -148,11 +153,13 @@ if __name__ == '__main__':
 	print('='*80)
 	print('Create groups')
 	print('='*80)
-	groups.create_group(1, 'test1')
-	groups.create_group(2, 'test2')
-	groups.create_group(3, 'test3')
-	groups.create_group(4, 'test4')
-	groups.create_group(5, 'test5')
+	gids = list()
+	gids.append(groups.create_group(1, 'test1'))
+	gids.append(groups.create_group(2, 'test2'))
+	gids.append(groups.create_group(3, 'test3'))
+	gids.append(groups.create_group(4, 'test4'))
+	gids.append(groups.create_group(5, 'test5'))
+	print('gids: {}'.format(gids))
 	for group in groups.get_all_groups():
 		print(group)
 	for gm in groups.get_all_group_memberships():
@@ -186,6 +193,26 @@ if __name__ == '__main__':
 		print('User:', user)
 		for group in groups.get_groups_for(user):
 			print(group)
+	print('='*80)
+	print('Add all members to 1')
+	print('='*80)
+	groups.add_member(1, 4)
+	groups.add_member(1, 5)
+	for user in groups.get_members_for(1):
+		print(user)
+	print('='*80)
+	print('Set partners for group 1')
+	print('='*80)
+	assignment = {
+		1 : 2,
+		2 : 3,
+		3 : 4,
+		4 : 5,
+		5 : 1
+	}
+	groups.set_partners(1, assignment)
+	for user in groups.get_members_for(1):
+		print(user)
 	print('='*80)
 	print('Remove member')
 	print('='*80)
@@ -243,4 +270,8 @@ if __name__ == '__main__':
 	groups.delete_group(5)
 	print(groups.get_all_groups())
 	print(groups.get_all_group_memberships())
+	print('='*80)
+	print('Create another group')
+	print('='*80)
+	print('gid: {}'.format(groups.create_group(1, 'Works!')))
 

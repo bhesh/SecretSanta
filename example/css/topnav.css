@@ -1,0 +1,50 @@
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+.topnav {
+	overflow: hidden;
+	border-bottom: 1px solid #ccc;
+}
+
+.topnav a {
+	padding: 14px 16px;
+	color: black;
+	text-decoration: none;
+	font-size: 16px;
+}
+
+.topnav a:hover {
+	background: #ccc;
+	color: black;
+}
+
+.topnav #desktopNavLinks {
+	display: none;
+}
+
+.topnav #navLinks {
+	display: none;
+}
+
+.topnav #navLinks a {
+	display: block;
+}
+
+.mobilenav a {
+	display: inline-block;
+}
+
+.topnav .active {
+	background: #b30000;
+	color: white;
+}
+
+@media only screen and (min-width: 768px) {
+	.mobilenav {display: none;}
+	.topnav a {float: left;}
+	.topnav #desktopNavLinks {display: inline;}
+}
+

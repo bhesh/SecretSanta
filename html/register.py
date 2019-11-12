@@ -6,88 +6,133 @@
 # @email hessionb@gmail.com
 #
 
-import cgi, re
-from include import makehtml, tools, ssdb
+from env import *
+import re
+import sshttp
 
 try:
-	args = cgi.FieldStorage()
+	import sessions, sshtml, userstable
 
-	if tools.is_logged_in():
-		HTML='<p><br/>You are already logged in. Please logout to continue.</p>'
-		print('Content-Type: text/html')
-		print('')
-		print(makehtml.makehtml(HTML))
+	args = sshttp.get_parameters()
+
+	if sessions.session_is_valid():
+		DATA = '<p>You are already signed in. Please sign out to continue.</p>'
+		ASIDE = """<h2>What is it?</h2>
+		<p>Secret santa account registration</p>
+		<h2 style="margin-top: 15px;">How does it work?</h2>
+		<p>Enter your information in the fields. Once completed, you can either create a group or be invited by others.</p>"""
+		MOBILE = ''
+		replace = {
+			'desktopNavLinks' : sshtml.buildDesktopNavLinks(),
+			'navLinks' : sshtml.buildNavLinks(),
+			'accountLinks' : sshtml.buildAccountLinks(False),
+			'body' : sshtml.buildBody(data=DATA, aside=ASIDE, mobile=MOBILE)
+		}
+		sshttp.send200(sshtml.buildContainerPage(replace))
 	else:
-		if tools.is_get():
-			HTML="""<p><br/>Registration</p>
-			<form action="/register.py" method="POST">
-			<br/>Email:<br/><input type="text" name="email"/><br/>{}
-			<br/>Password:<br/><input type="password" name="password"/><br/>{}
-			<br/>Retype Password:<br/><input type="password" name="retype"/><br/>{}
-			<br/>First Name:<br/><input type="text" name="firstname"/><br/>{}
-			<br/>Last Name:<br/><input type="text" name="lastname"/><br/>{}
-			<br/><input type="submit" value="Submit"/>
-			</form>"""
+		if sshttp.is_get():
+			DATA = """<form id="register" action="/register.py" method="post">
+					<div class="register">
+						<h1>Register</h1>
+						<p>Please fill out this form to create an account.</p>
+						{}
+						<hr/>
 
-			ERROR='<font color="#a93226">{}</font><br/>'
+						<label for="email">Email</label>
+						<input type="text" placeholder="Enter your email" name="email" required/>
 
-			print('Status: 200 OK')
-			print('Content-Type: text/html')
-			print('')
+						<label for="password">Password</label>
+						<input type="password" placeholder="Enter your password" name="password" required/>
 
-			args = cgi.FieldStorage()
-			formatting = ['', '', '', '', '']
+						<label for="retype">Retype Password</label>
+						<input type="password" placeholder="Retype your password" name="retype" required/>
+
+						<label for="name">Name</label>
+						<input type="text" placeholder="Enter your name" name="name" required/>
+						<hr/>
+
+						<p>By creating an account you agree to our <a href="#">Terms & Privacy</a>.</p>
+						<button><a href="javascript:void(0);" onclick="document.getElementById('register').submit()">Create Account</a></button>
+						<p class="signin">Already have an account? <a href="/getacc.py">Sign in</a></p>
+					</div>
+				</form> """
+			ASIDE = """<h2>What?</h2>
+			<p>Secret santa registration and group planner.</p>
+			<h2 style="margin-top: 15px;">How?</h2>
+			<p>Register now and invite your friends!</p>"""
+			MOBILE = '<p align="center"><br/><button><a href="/register.py">Register Now</a></button></p>'
+
+			ERROR = '<p><font color="#a93226">{}</font><br/></p>'
+
+			formatting = ''
 			if 'noemail' in args:
-				formatting[0] = ERROR.format('Must provide an email')
-			if 'nopassword' in args:
-				formatting[1] = ERROR.format('Must provide a password')
-			if 'noretype' in args:
-				formatting[2] = ERROR.format('Must retype the password')
-			if 'nofirstname' in args:
-				formatting[3] = ERROR.format('Must provide a first name')
-			if 'nolastname' in args:
-				formatting[4] = ERROR.format('Must provide a last name')
-			if 'bademail' in args:
-				formatting[0] = ERROR.format('Please provide a real email')
-			if 'passwordmismatch' in args:
-				formatting[2] = ERROR.format('Passwords did not match')
-			if 'emailinuse' in args:
-				formatting[0] = ERROR.format('Email is already in use')
-			print(makehtml.makehtml(HTML.format(*formatting)))
+				formatting = ERROR.format('Must provide an email')
+			elif 'nopassword' in args:
+				formatting = ERROR.format('Must provide a password')
+			elif 'noretype' in args:
+				formatting = ERROR.format('Must retype the password')
+			elif 'noname' in args:
+				formatting = ERROR.format('Must provide a name')
+			elif 'bademail' in args:
+				formatting = ERROR.format('Please provide a real email')
+			elif 'passwordmismatch' in args:
+				formatting = ERROR.format('Passwords did not match')
+			elif 'emailinuse' in args:
+				formatting = ERROR.format('Email is already in use')
+			replace = {
+				'resources' : sshtml.buildResources({'/css/register.css' : 'stylesheet'}),
+				'desktopNavLinks' : sshtml.buildDesktopNavLinks(),
+				'navLinks' : sshtml.buildNavLinks(),
+				'accountLinks' : sshtml.buildAccountLinks(False),
+				'body' : sshtml.buildBody(data=DATA.format(formatting), aside=ASIDE, mobile=MOBILE)
+			}
+			sshttp.send200(sshtml.buildContainerPage(replace))
 
-		elif tools.is_post():
+		elif sshttp.is_post():
 			EMAIL_MATCH = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
 
+			parameters = dict()
 			if 'email' not in args:
-				makehtml.printredirect('/register.py?noemail=1')
+				parameters['noemail'] = 1
+				sshttp.send302(sshttp.build_uri('/register.py', parameters))
 			elif 'password' not in args:
-				makehtml.printredirect('/register.py?nopassword=1')
+				parameters['nopassword'] = 1
+				sshttp.send302(sshttp.build_uri('/register.py', parameters))
 			elif 'retype' not in args:
-				makehtml.printredirect('/register.py?noretype=1')
-			elif 'firstname' not in args:
-				makehtml.printredirect('/register.py?nofirstname=1')
-			elif 'lastname' not in args:
-				makehtml.printredirect('/register.py?nolastname=1')
-			elif not EMAIL_MATCH.fullmatch(tools.unescape(args.getvalue('email'))):
-				makehtml.printredirect('/register.py?bademail=1')
+				parameters['noretype'] = 1
+				sshttp.send302(sshttp.build_uri('/register.py', parameters))
+			elif 'name' not in args:
+				parameters['noname'] = 1
+				sshttp.send302(sshttp.build_uri('/register.py', parameters))
+			elif not EMAIL_MATCH.fullmatch(args.getvalue('email')):
+				parameters['bademail'] = 1
+				sshttp.send302(sshttp.build_uri('/register.py', parameters))
 			elif args.getvalue('password') != args.getvalue('retype'):
-				makehtml.printredirect('/register.py?passwordmismatch=1')
+				parameters['passwordmismatch'] = 1
+				sshttp.send302(sshttp.build_uri('/register.py', parameters))
 			else:
-				db = ssdb.SSDatabase('db/secretsanta.db')
-				if not db.create_user(tools.unescape(args.getvalue('email')).lower(),
-						tools.unescape(args.getvalue('firstname')),
-						tools.unescape(args.getvalue('lastname')),
-						tools.unescape(args.getvalue('password'))):
-					makehtml.printredirect('/register.py?emailinuse=1')
-				HTML='<p><br/>Registration successful. Click <a href="/login.py">here</a> to login.</p>'
-				print('Content-Type: text/html')
-				print('')
-				print(makehtml.makehtml(HTML))
+				users = userstable.SSUsers(DATABASE)
+				uid = users.create_user(args.getvalue('email').lower(), args.getvalue('name'), args.getvalue('password'))
+				#parameters['emailinuse'] = 1
+				#sshttp.send302(sshttp.build_uri('/register.py', parameters))
+				DATA = '<p>Registration successful. Click <a href="/getacc.py">here</a> to sign in.</p>'
+				ASIDE = """<h2>What?</h2>
+				<p>Secret santa registration and group planner.</p>
+				<h2 style="margin-top: 15px;">How?</h2>
+				<p>Register now and invite your friends!</p>"""
+				MOBILE = '<p align="center"><br/><button><a href="/register.py">Register Now</a></button></p>'
+				replace = {
+					'desktopNavLinks' : sshtml.buildDesktopNavLinks(),
+					'navLinks' : sshtml.buildNavLinks(),
+					'accountLinks' : sshtml.buildAccountLinks(False),
+					'body' : sshtml.buildBody(data=DATA, aside=ASIDE, mobile=MOBILE)
+				}
+				sshttp.send200(sshtml.buildContainerPage(replace))
 
 		else:
-			makehtml.printerror('405 Invalid Method', '<p><br/>Method not supported</p>')
-except ssdb.Error as e:
-	makehtml.printerror('500 Server Error', '<p><br/>Database error: {}</p>'.format(tools.escape(str(e))))
+			sshttp.senderror(405)
 except:
-	makehtml.printerror('500 Server Error', '<p><br/>500 Server Error</p>')
+	sshttp.senderror(500)
+	import sys, traceback
+	traceback.print_exc(file=sys.stderr)
 

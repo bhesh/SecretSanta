@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="fontawesome/5.11.2/css/all.css">
+<link rel="stylesheet" href="css/topnav.css" />
+<link rel="stylesheet" href="css/style.css" />
+<script type="text/javascript">
+function navExpand() {
+	var x = document.getElementById("navLinks");
+	if (x.style.display === "block") {
+		x.style.display = "none";
+	} else {
+		x.style.display = "block";
+	}
+}
+function navShow() {
+	var x1 = document.getElementById("navLinks");
+	var x2 = document.getElementById("desktopNavLinks");
+	if (window.outerWidth > 768) {
+		x1.style.display = "none";
+		x2.style.display = "inline";
+	} else {
+		x1.style.display = "none";
+		x2.style.display = "none";
+	}
+}
+</script>
+</head>
+<body onresize="navShow()">
+
+<div class="topnav">
+	<div class="mobilenav">
+		<a href="javascript:void(0);" class="icon" onclick="navExpand()">
+			<i class="fa fa-bars"></i>
+		</a>
+		<a href="index.html" id="logo">
+			<i class="fas fa-gift"></i>
+		</a>
+	</div>
+	<div id="desktopNavLinks">
+		<a href="index.html" id="logo">
+			<i class="fas fa-gift"></i>
+		</a>
+		<a href="groups.html">Groups</a>
+		<a href="registry.html">Registry</a>
+		<a href="support.html">Support</a>
+		<a href="about.html" class="active">About</a>
+	</div>
+	<div id="navLinks">
+		<a href="index.html">Home</a>
+		<a href="account.html">Account</a>
+		<a href="groups.html">Groups</a>
+		<a href="registry.html">Registry</a>
+		<a href="support.html">Support</a>
+		<a href="about.html" class="active">About</a>
+	</div>
+</div>
+
+<div class="header">
+	<div class="row">
+		<div class="col-11 col-s-10 banner">
+			<p>Secret Santa <i class="fas fa-gift"></i> <font size="2px">Hession Edition</font></p>
+		</div>
+		<div class="col-1 col-s-2 account">
+			<div class="accountlinks">
+				<a href="account.html" class="icon"><i class="fas fa-user-circle"></i></a></li>
+				<a href="signin.html">Sign in</a></li>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="row">
+	<div class="col-9 col-s-12">
+		<div class="data">
+			<p>Simple solution to annoying partner assignments. Ensures no one knows any other person's partner.</p>
+			<p><h2>Future Plans</h2></p>
+			<p><h3>Groups</h3></p>
+			<ul>
+				<li>Group administrators</li>
+				<li>Group privacy tools</li>
+				<li>Restricted partner viewing</li>
+			</ul>
+			<p><h3>Allow Partner Assignment Rules</h3></p>
+			<ul>
+				<li>Household exclusion</li>
+				<li>Location exclusions</li>
+				<li>Age matching</li>
+			</ul>
+			<p><h3>Registries</h3></p>
+			<ul>
+				<li>List of present ideas</li>
+				<li>Claim purchase</li>
+			</ul>
+			<p align="center"><br/><button><a href="register.html">Register Now</a></button></p>
+			<p class="footnote">Website designed by Brian Hession</p>
+		</div>
+	</div>
+
+	<div class="col-3 col-s-12">
+		<div class="aside">
+			<h2>What?</h2>
+			<p>Secret santa registration and group planner.</p>
+			<h2 style="margin-top: 15px;">How?</h2>
+			<p>Register now and invite your friends!</p>
+		</div>
+		<div class="mobile">
+			<p align="center"><br/><button><a href="register.html">Register Now</a></button></p>
+		</div>
+		<div class="center">
+			<img src="res/secret_santa.png" style="margin: 45px 0 0 0;width: 100%;"/>
+			<p class="footnote">Image owned by Pratik Patil</p>
+		</div>
+	</div>
+</div>
+
+<div class="footer">
+	<p>Hession Secret Santa is dedicated to making the holidays easy and stress free. While using this site, you agree to have read and accepted out terms of use, cookie, and private policy. Copyright 2019 by Brian Hession. All Rights Reserved.
+</div>
+
+</body>
+</html>
+

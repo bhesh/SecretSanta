@@ -9,12 +9,13 @@
 #
 
 from env import *
-import ssdb, random, hashlib
+import random, hashlib
+import ssdb
 from ssdb import Error
 
 USERS_SCHEMA = ssdb.SSTableSchema('users')
 USERS_SCHEMA.add_column(ssdb.SSColumnSchema('id', 'integer', ('PRIMARY KEY', 'AUTOINCREMENT')))
-USERS_SCHEMA.add_column(ssdb.SSColumnSchema('email', 'nvarchar[320]', ('NOT NULL',)))
+USERS_SCHEMA.add_column(ssdb.SSColumnSchema('email', 'nvarchar[320]', ('UNIQUE', 'NOT NULL',)))
 USERS_SCHEMA.add_column(ssdb.SSColumnSchema('name', 'nvarchar[320]', ('NOT NULL',)))
 USERS_SCHEMA.add_column(ssdb.SSColumnSchema('password', 'nvarchar[320]', ('NOT NULL',)))
 USERS_SCHEMA.add_column(ssdb.SSColumnSchema('salt', 'nvarchar[320]', ('NOT NULL',)))
@@ -67,30 +68,25 @@ class SSUsers(object):
 		return res[0]
 
 	def create_user(self, email, name, password, admin=False):
-		res = self.get_user_by_email(email, ['id'])
-		if res:
-			return False
-
 		# Create salt and hash password
 		salt = str(self.__create_salt(32))
 		phash = str(hashlib.sha256(bytes(password + salt, 'UTF-8')).hexdigest())
 
 		# Insert the values
-		columns = list(USERS_SCHEMA.columns())[1:]
-		statement = 'INSERT INTO {} ({}) VALUES ({})'.format(USERS_SCHEMA.name,
-				','.join(columns), ','.join(['?' for c in range(len(columns))]))
-		self.db.execute_prepared(statement, email, name, phash, salt, admin)
-		return True
+		data = {
+			'email' : email,
+			'name' : name,
+			'password' : phash,
+			'salt' : salt,
+			'admin' : False
+		}
+		return self.db.insert_and_retrieve(USERS_SCHEMA.name, data)
 
 	def delete_user(self, uid):
 		statement = 'DELETE FROM {} WHERE id=?'.format(USERS_SCHEMA.name)
 		self.db.execute_prepared(statement, uid)
 
 	def set_password(self, uid, password):
-		res = self.get_user_by_id(uid, ['id'])
-		if not res:
-			raise Error('user does not exist')
-
 		# Create salt and hash password
 		salt = str(self.__create_salt(32))
 		phash = str(hashlib.sha256(bytes(password + salt, 'UTF-8')).hexdigest())
@@ -115,9 +111,6 @@ class SSUsers(object):
 		return phash == check
 
 	def set_name(self, uid, name):
-		row = self.get_user_by_id(uid, ['id'])
-		if not row:
-			raise Error('user does not exist')
 		statement = 'UPDATE {} SET name=? WHERE id=?'.format(USERS_SCHEMA.name)
 		self.db.execute_prepared(statement, name, uid)
 
@@ -128,12 +121,8 @@ class SSUsers(object):
 		return bool(user[0])
 
 	def set_admin(self, uid, value=False):
-		user = self.get_user_by_id(uid, ['admin'])
-		if not user:
-			raise Error('user does not exist')
-		if bool(user[0]) != value:
-			statement = 'UPDATE {} SET admin=? WHERE id=?'.format(USERS_SCHEMA.name)
-			self.db.execute_prepared(statement, value, uid)
+		statement = 'UPDATE {} SET admin=? WHERE id=?'.format(USERS_SCHEMA.name)
+		self.db.execute_prepared(statement, value, uid)
 
 ##########################################################################
 # TESTING
@@ -143,6 +132,7 @@ if __name__ == '__main__':
 	print('='*80)
 	print('Create database/table')
 	print('='*80)
+	print(USERS_SCHEMA)
 	users = SSUsers(DATABASE)
 	print('='*80)
 	print('Drop table')
@@ -215,7 +205,8 @@ if __name__ == '__main__':
 		try:
 			users.create_user(USERS_SCHEMA.get(user, 'email'), 'test', 'test', 'test')
 			print('Failed for email `{}`'.format(user[COLUMNS['Email']]))
-		except:
+		except Error as e:
+			print('Error: {}'.format(e))
 			print('Successful error for email `{}`'.format(USERS_SCHEMA.get(user, 'email')))
 	print('='*80)
 	print('Delete users')

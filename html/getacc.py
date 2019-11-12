@@ -1,24 +1,34 @@
 #!/usr/bin/python3
 #
-# Gets the account information
+# Checks for an active session
 #
 # @author Brian Hession
 # @email hessionb@gmail.com
 #
 
-import sys
-import sessions, sshttp
+from env import *
+import datetime
+import sshttp
 
 try:
-	referer = sshttp.get_referer()
+	import sessions
+
+	args = sshttp.get_parameters()
+	redirect = sshttp.get_redirect()
+
 	if sessions.session_is_valid():
-		if referer:
-			sshttp.sendredirect(referer)
+		if redirect:
+			sshttp.send302(redirect)
 		else:
-			sshttp.sendredirect('/')
+			sshttp.send302('/')
+	elif sshttp.has_cookies():
+		sshttp.send302(sshttp.build_redirect_uri('/signin.py', redirect), headers={
+				'Set-Cookie' : 'ssid=expired; Secure; Expires="{}"'.format(datetime.datetime.utcfromtimestamp(0))
+		})
 	else:
-		sshttp.sendredirect('/login.py', referer)
+		sshttp.send302(sshttp.build_redirect_uri('/signin.py', redirect))
 except:
 	sshttp.senderror(500)
-	print(sys.exc_info()[0], file=sys.stderr)
+	import sys, traceback
+	traceback.print_exc(file=sys.stderr)
 

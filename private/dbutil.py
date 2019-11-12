@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 from env import *
-import sys, ssdb
+import sys, ssdb, userstable
 
 def main(args):
 	if len(args) < 1:
@@ -10,66 +10,38 @@ def main(args):
 	command = args[0]
 	options = args[1:]
 
-	db = ssdb.SSDatabase('../db/secretsanta.db')
-	if command == 'listusers':
-		for user in db.get_all_users():
-			print(user)
-	elif command == 'createuser':
-		if len(options) != 4:
-			print_usage_and_exit()
-		db.create_user(options[0], options[1], options[2], options[3])
-	elif command == 'setadmin':
+	db = ssdb.SSDatabase(DATABASE)
+	if command == 'select':
 		if len(options) < 1:
 			print_usage_and_exit()
-		for uid in options:
-			db.set_admin(uid)
-	elif command == 'checkadmin':
-		if len(options) < 1:
+		table = options[0]
+		matches = options[1:]
+		statement = 'SELECT * FROM {}'.format(table)
+		if len(matches) > 0:
+			statement += 'WHERE {}'.format(' AND '.join(matches))
+		for u in db.execute(statement):
+			print(u)
+	elif command == 'transfer':
+		if len(options) < 2:
 			print_usage_and_exit()
-		for uid in options:
-			print(uid, db.is_admin(uid))
-	elif command == 'removeadmin':
-		if len(options) < 1:
-			print_usage_and_exit()
-		for uid in options:
-			db.remove_admin(uid)
-	elif command == 'deleteuser':
-		if len(options) < 1:
-			print_usage_and_exit()
-		for uid in options:
-			db.delete_user(uid)
-	elif command == 'listsessions':
-		for session in db.get_all_sessions():
-			print(session)
-	elif command == 'deletesession':
-		if len(options) < 1:
-			print_usage_and_exit()
-		for sid in options:
-			db.delete_session(options[0])
-	elif command == 'cleansessions':
-		db.clean_sessions()
-	elif command == 'drop':
-		if len(options) != 1 and options[0] != 'sessions':
-			print_usage_and_exit()
-		db.drop_table(options[0])
-	elif command == 'set':
-		if len(options) != 4:
-			print_usage_and_exit()
-		db.set(options[0], options[1], options[2], options[3])
+		db2 = ssdb.SSDatabase(options[0])
+		print(userstable.SSUsers(options[1]).get_all_users())
+		db3 = ssdb.SSDatabase(options[1])
+		statement1 = 'SELECT id,Email,Password,PasswordSalt,FirstName,LastName,Admin FROM users'
+		for u in db2.execute(statement1):
+			statement2 = 'INSERT INTO users (email,password,salt,name,admin) VALUES (?,?,?,?,?)'
+			db3.execute_prepared(statement2, u[1], u[2], u[3], ' '.join([u[4],u[5]]), u[6])
+		for u in db3.execute('SELECT * FROM users'):
+			print(u)
+	else:
+		print_usage_and_exit()
+
 def print_usage_and_exit():
 	print('Usage: {} <command> [options]'.format(sys.argv[0]))
 	print('')
 	print('Commands')
-	print('listusers')
-	print('createuser email firstname lastname password')
-	print('setadmin [uid...]')
-	print('checkadmin [uid...]')
-	print('removeadmin [uid...]')
-	print('deleteuser [uid...]')
-	print('listsessions')
-	print('deletesession [sid...]')
-	print('set table u/sid key value')
-	print('drop table')
+	print('select <table> [key=value...]')
+	print('transfer <dbfile>')
 	sys.exit(0)
 
 if __name__ == '__main__':

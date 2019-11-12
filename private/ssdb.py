@@ -33,7 +33,7 @@ class SSColumnSchema(object):
 
 class SSTableSchema(object):
 
-	def __init__(self, table_name, table_flags=None):
+	def __init__(self, table_name, table_flags=list()):
 		self.name = table_name
 		self._cols = collections.OrderedDict()
 		self.colmap = dict()
@@ -43,7 +43,10 @@ class SSTableSchema(object):
 		return col_name in self._cols
 
 	def has_flags(self):
-		return self.flags != None and len(self.flags) > 0
+		return self.flags and len(self.flags) > 0
+
+	def add_flag(self, table_flags):
+		self.flags.append(table_flags)
 
 	def columns(self):
 		return self._cols.keys()
@@ -66,6 +69,12 @@ class SSTableSchema(object):
 				return False
 		return True
 
+	def __str__(self):
+		rowstr = [str(c) for c in self]
+		if self.has_flags():
+			rowstr += [f for f in self.flags]
+		return 'CREATE TABLE IF NOT EXISTS {} ({});'.format(self.name, ', '.join(rowstr))
+
 class SSDatabase(object):
 
 	def __init__(self, dbfile):
@@ -83,17 +92,34 @@ class SSDatabase(object):
 			c.execute(statement, (*values,))
 			return c.fetchall()
 
+	def insert_and_retrieve(self, table, data):
+		keys = data.keys()
+		vals = [data[k] for k in keys]
+		statement = 'INSERT INTO {} ({}) VALUES ({})'.format(table, ','.join(keys), ','.join(['?' for v in vals]))
+		with sqlite3.connect(self.dbfile) as conn:
+			c = conn.cursor()
+			c.execute(statement, (*vals,))
+			c.execute('SELECT last_insert_rowid()')
+			return int(c.fetchall()[0][0])
+
+	def batch_update(self, table, search_data, update_data):
+		if len(search_data) != len(update_data):
+			raise Error('search and update data lengths must match')
+		statement_fmt = 'UPDATE {} SET {} WHERE {}'
+		with sqlite3.connect(self.dbfile) as conn:
+			c = conn.cursor()
+			for i in range(len(search_data)):
+				vals = [update_data[i][k] for k in update_data[i].keys()]
+				vals += [search_data[i][k] for k in search_data[i].keys()]
+				statement = statement_fmt.format(table,
+						','.join(['{}=?'.format(k) for k in update_data[i].keys()]),
+						' AND '.join(['{}=?'.format(k) for k in search_data[i].keys()]))
+				c.execute(statement, (*vals,))
+
 	def create_table(self, table_schema):
 		if not isinstance(table_schema, SSTableSchema):
 			raise Error('invalid table schema')
-		rowstr = list()
-		for c in table_schema:
-			rowstr.append(str(c))
-		if table_schema.has_flags():
-			for f in table_schema.flags:
-				rowstr.append(f)
-		return self.execute('CREATE TABLE IF NOT EXISTS {} ({})'.format(table_schema.name,
-				',\n'.join(rowstr)))
+		return self.execute(str(table_schema))
 
 	def drop_table(self, table_schema):
 		if not isinstance(table_schema, SSTableSchema):

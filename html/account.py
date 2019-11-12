@@ -1,40 +1,46 @@
 #!/usr/bin/python3
 #
-# Shows the account page
+# Makes the index page
 #
 # @author Brian Hession
 # @email hessionb@gmail.com
 #
 
-from include import makehtml, tools, ssdb
+from env import *
+import sshttp
 
 try:
-	db = ssdb.SSDatabase('db/secretsanta.db')
+	import sessions, sshtml, userstable
 
-	if tools.is_logged_in():
-		user = tools.get_user()
-		if not user:
-			raise ssdb.Error('No user with id `{}`'.format(uid))
+	if sessions.session_is_valid():
+		DATA = """<h1>Welcome, {}!</h1>
+			<p align="center">Your email: {}</p>
+			<p align="center"><a href="{}">change name</a> | <a href="{}">change password</a></p>
+			<p align="center"><a href="/signout.py"><br/>Sign out</a></p>""".format(
+					sshttp.build_redirect_uri('/getacc.py', '/updateacc.py?changename=1'),
+					sshttp.build_redirect_uri('/getacc.py', '/updateacc.py?changepassword=1'))
+		ASIDE = """<h2>What is it?</h2>
+			<p>Secret santa registration and group planner.</p>
+			<h2 style="margin-top: 15px;">How does it work?</h2>
+			<p>Create a group now and invite your friends!</p>"""
+		MOBILE = '<p align="center"><br/><button><a href="{}">Create Group Now</a></button></p>'.format(sshttp.build_redirect_uri('/getacc.py', '/groupctl.py?creategroup=1'))
 
-		email = tools.escape(user[ssdb.COLUMNS['Email']])
-		firstname = tools.escape(user[ssdb.COLUMNS['FirstName']])
-		lastname = tools.escape(user[ssdb.COLUMNS['LastName']])
+		user = sessions.get_user()
+		DATA = DATA.format(userstable.USERS_SCHEMA.get(user, 'name'),
+				userstable.USERS_SCHEMA.get(user, 'email'))
 
-		HTML = """<p><br/>Email: {}<br/>Name: {} {}<br/></p>
-				<p><br/><a href="/updateacc.py?changepassword=1">Change Password</a> | 
-				<a href="/updateacc.py?changename=1">Change Name</a></p>"""
-
-		if db.is_admin(user[ssdb.COLUMNS['id']]):
-			HTML += '<p><br/><a href="/admin.py">Admin Page</a></p>'
-
-		print('Status: 200 OK')
-		print('Content-Type: text/html')
-		print('')
-		print(makehtml.makehtml(HTML.format(email, firstname, lastname), makehtml.NAV_BAR['account']))
+		replace = {
+			'desktopNavLinks' : sshtml.buildDesktopNavLinks('Account'),
+			'navLinks' : sshtml.buildNavLinks('Account'),
+			'accountLinks' : sshtml.buildAccountLinks(True),
+			'body' : sshtml.buildBody(data=DATA, aside=ASIDE, mobile=MOBILE)
+		}
+		sshttp.send200(sshtml.buildContainerPage(replace))
 	else:
-		makehtml.printredirect('/login.py')
-except ssdb.Error as e:
-	makehtml.printerror('500 Server Error', '<p><br/>Database error: {}</p>'.format(tools.escape(str(e))))
+		sshttp.senderror(403)
+
 except:
-	makehtml.printerror('500 Server Error', '<p><br/>500 Server Error</p>')
+	sshttp.senderror(500)
+	import sys, traceback
+	traceback.print_exc(file=sys.stderr)
 

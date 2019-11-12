@@ -29,11 +29,8 @@ def get_session():
 def get_user():
 	session = get_session()
 	if session:
-		return users.get_user_by_id(sessionstable.SESSIONS_SCHEMA.get(session, 'ssid'))
+		return users.get_user_by_id(sessionstable.SESSIONS_SCHEMA.get(session, 'uid'))
 	return None
-
-def create_session(uid):
-	return sessions.create_session(uid)
 
 def delete_session():
 	if has_session():

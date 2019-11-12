@@ -9,7 +9,8 @@
 #
 
 from env import *
-import ssdb, random, datetime, time
+import sys, random, datetime
+import ssdb
 from ssdb import Error
 
 SESSIONS_SCHEMA = ssdb.SSTableSchema('sessions')
@@ -56,23 +57,32 @@ class SSSessions(object):
 	def update_session(self, ssid):
 		self.clean_sessions()
 		statement = 'UPDATE {} SET timestamp=? WHERE ssid=?'.format(SESSIONS_SCHEMA.name)
-		self.db.execute_prepared(statement, datetime.datetime.now().timestamp(), ssid)
+		self.db.execute_prepared(statement, datetime.datetime.utcnow().timestamp(), ssid)
 
 	def create_session(self, uid, ttl=86400):
 		self.clean_sessions()
-		ssid = None
-		while True:
-			ssid = self.__create_ssid(32)
-			if not ssid:
-				raise Error('Error creating sessionId')
-			row = self.get_session(ssid)
-			if not row:
-				break
+
+		# Create statement
 		cols = SESSIONS_SCHEMA.columns()
 		statement = 'INSERT INTO {} ({}) VALUES ({})'.format(SESSIONS_SCHEMA.name,
 				','.join(cols), ','.join(['?' for c in cols]))
-		timestamp = datetime.datetime.now().timestamp()
-		self.db.execute_prepared(statement, ssid, uid, timestamp, timestamp + ttl)
+
+		# Attempt creating a session (max 5 times)
+		ssid = None
+		for i in range(5):
+			try:
+				ssid = self.__create_ssid(32)
+				timestamp = datetime.datetime.utcnow().timestamp()
+				self.db.execute_prepared(statement, ssid, uid, timestamp, timestamp + ttl)
+				break
+			except Error as e:
+				# Most likely a unique constraint error
+				print('Error creating session: {}', e, file=sys.stderr)
+				ssid = None
+
+		# Creating a session failed
+		if not ssid:
+			raise Error('Could not create a session')
 		return ssid
 
 	def delete_session(self, ssid):
@@ -83,11 +93,11 @@ class SSSessions(object):
 		self.db.execute_prepared(statement, ssid)
 
 	def clean_sessions(self, time=1800):
-		now = datetime.datetime.now().timestamp()
+		now = datetime.datetime.utcnow().timestamp()
 		statement = 'DELETE FROM {} WHERE timestamp<? OR expiration<?'.format(SESSIONS_SCHEMA.name)
 		self.db.execute_prepared(statement, now - time, now)
 
-	def is_valid(self, sessionId, time=1800):
+	def is_valid(self, ssid, time=1800):
 		self.clean_sessions(time)
 		session = self.get_session(ssid)
 		return session
@@ -97,9 +107,11 @@ class SSSessions(object):
 ##########################################################################
 
 if __name__ == '__main__':
+	import time
 	print('='*80)
 	print('Create database/table')
 	print('='*80)
+	print(SESSIONS_SCHEMA)
 	sessions = SSSessions(DATABASE)
 	print('='*80)
 	print('Drop table')
