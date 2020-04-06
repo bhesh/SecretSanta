@@ -112,22 +112,27 @@ try:
 				sshttp.send302(sshttp.build_uri('/register.py', parameters))
 			else:
 				users = userstable.SSUsers(DATABASE)
-				uid = users.create_user(args.getvalue('email').lower(), args.getvalue('name'), args.getvalue('password'))
-				#parameters['emailinuse'] = 1
-				#sshttp.send302(sshttp.build_uri('/register.py', parameters))
-				DATA = '<p>Registration successful. Click <a href="/getacc.py">here</a> to sign in.</p>'
-				ASIDE = """<h2>What?</h2>
-				<p>Secret santa registration and group planner.</p>
-				<h2 style="margin-top: 15px;">How?</h2>
-				<p>Register now and invite your friends!</p>"""
-				MOBILE = '<p align="center"><br/><button><a href="/register.py">Register Now</a></button></p>'
-				replace = {
-					'desktopNavLinks' : sshtml.buildDesktopNavLinks(),
-					'navLinks' : sshtml.buildNavLinks(),
-					'accountLinks' : sshtml.buildAccountLinks(False),
-					'body' : sshtml.buildBody(data=DATA, aside=ASIDE, mobile=MOBILE)
-				}
-				sshttp.send200(sshtml.buildContainerPage(replace))
+				email = args.getvalue('email').lower()
+				name = args.getvalue('name')
+				password = args.getvalue('password')
+				if users.get_user_by_email(email, cols=['id']):
+					parameters['emailinuse'] = 1
+					sshttp.send302(sshttp.build_uri('/register.py', parameters))
+				else:
+					uid = users.create_user(email, name, password)
+					DATA = '<p>Registration successful. Click <a href="/getacc.py">here</a> to sign in.</p>'
+					ASIDE = """<h2>What?</h2>
+					<p>Secret santa registration and group planner.</p>
+					<h2 style="margin-top: 15px;">How?</h2>
+					<p>Register now and invite your friends!</p>"""
+					MOBILE = '<p align="center"><br/><button><a href="/register.py">Register Now</a></button></p>'
+					replace = {
+						'desktopNavLinks' : sshtml.buildDesktopNavLinks(),
+						'navLinks' : sshtml.buildNavLinks(),
+						'accountLinks' : sshtml.buildAccountLinks(False),
+						'body' : sshtml.buildBody(data=DATA, aside=ASIDE, mobile=MOBILE)
+					}
+					sshttp.send200(sshtml.buildContainerPage(replace))
 
 		else:
 			sshttp.senderror(405)

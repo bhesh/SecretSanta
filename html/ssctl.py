@@ -47,8 +47,8 @@ try:
 									{userlist}
 								</select>
 								<select id="matchType">
-									<option value="0">NEVER GETS</option>
-									<option value="1">ALWAYS GETS</option>
+									<option value="0">CAN NOT GET</option>
+									<option value="1">CAN ONLY GET</option>
 								</select>
 								<select id="userList2">
 									{userlist}
@@ -68,7 +68,7 @@ try:
 					ERROR = '<p><font color="#a93226">{}</font><br/></p>'
 					formatting = ''
 					if 'failed' in args:
-						formatting = ERROR.format('No combination of partners existed with the privided rules.')
+						formatting = ERROR.format('No combination of targets exist with the privided rules.')
 
 					# Populate list
 					userlist = list()

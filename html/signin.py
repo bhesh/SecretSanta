@@ -81,7 +81,7 @@ try:
 				users = userstable.SSUsers(DATABASE)
 				ssids = sessionstable.SSSessions(DATABASE)
 
-				email = args.getvalue('email')
+				email = args.getvalue('email').lower()
 				password = args.getvalue('password')
 
 				if not users.validate_user(email, password):

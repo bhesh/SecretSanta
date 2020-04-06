@@ -128,8 +128,8 @@ try:
 						parameters['noemail'] = 1
 						sshttp.send302(sshttp.build_uri('/groups.py', parameters))
 					else:
-						member = userstable.SSUsers(DATABASE).get_user_by_email(args.getvalue('email'), cols=['id'])
 						gid = args.getvalue('gid')
+						member = userstable.SSUsers(DATABASE).get_user_by_email(args.getvalue('email').lower(), cols=['id'])
 						if not member:
 							parameters['gid'] = gid
 							parameters['nouser'] = 1

@@ -14,15 +14,15 @@ try:
 
 	loggedin = sessions.session_is_valid()
 
-	DATA = """<p>Simple solution to annoying partner assignments. Ensures no one knows any other person's partner.</p>
+	DATA = """<p>Simple solution to annoying secret santa target assignments. Ensures no one knows any other person's target.</p>
 			<p><h2>Future Plans</h2></p>
 			<p><h3>Groups</h3></p>
 			<ul>
 				<li>Group administrators</li>
 				<li>Group privacy tools</li>
-				<li>Restricted partner viewing</li>
+				<li>Restricted target viewing</li>
 			</ul>
-			<p><h3>Allow Partner Assignment Rules</h3></p>
+			<p><h3>Allow Target Assignment Rules</h3></p>
 			<ul>
 				<li>Household exclusion</li>
 				<li>Location exclusions</li>

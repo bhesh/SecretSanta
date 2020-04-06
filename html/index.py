@@ -14,12 +14,14 @@ try:
 
 	loggedin = sessions.session_is_valid()
 
-	DATA = '<p>Simple solution to annoying partner assignments. Ensures no one knows any other person\'s partner.</p>'
+	DATA = '<p>Simple solution to annoying secret santa target assignments. Ensures no one knows any other person\'s target.</p>'
 	if loggedin:
-		DATA += """<h2>Create a group today!</h2><p align="center"><br/>
-			<button><a href="{}">Create a Group Now</a></button></p>""".format(sshttp.build_redirect_uri('/getacc.py', '/groupctl.py?creategroup=1'))
+		DATA += """<h2>Create your group today!</h2><p align="center"><br/>
+			<button><a href="{}">Create a Group Now</a></button>""".format(sshttp.build_redirect_uri('/getacc.py', '/groupctl.py?creategroup=1'))
 	else:
-		DATA += '<h2>Create your account today!</h2><p align="center"><br/><button><a href="/register.py">Register Now</a></button></p>'
+		DATA += """<h2>Create your group today!</h2>
+				<p align="center" style="margin: 15px;"><button><a href="/getacc.py">Sign in</a></button></p>
+				<p align="center" style="margin-top: 15px;">Or if you do not have an account, <a href="/register.py">register now</a></p>"""
 	ASIDE = """<h2>What is it?</h2>
 		<p>Secret santa registration and group planner.</p>
 		<h2 style="margin-top: 15px;">How does it work?</h2>

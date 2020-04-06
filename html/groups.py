@@ -119,10 +119,10 @@ try:
 						<input type="hidden" name="setmoderator" value="0"/>
 						<a href="javascript:void(0);" onclick="document.getElementById('member{uid}Elevate').submit()" class="warning"><i class="fas fa-minus-circle"></i></a>
 					</form>"""
-				PARTNER_INFO = 'Partners have not been assigned yet. Please wait for assignment.'
+				PARTNER_INFO = 'Targets have not been assigned yet. Please wait for assignment.'
 				if pid:
 					partner = users.get_user_by_id(pid, cols=['name', 'email'])
-					PARTNER_INFO = '<p>Your assigned partner is {} (email={})</p>'.format(*partner)
+					PARTNER_INFO = '<p>Your assigned target is {} (email={})</p>'.format(*partner)
 
 				# Make memberlist
 				memberlist = list()
@@ -164,7 +164,7 @@ try:
 							moderatordata=MODERATOR_MEMBER_DATA, generaldata=GENERAL_MEMBER_DATA,
 							admindata=ADMIN_MEMBER_DATA, listitems='\n'.join(memberlist))
 			else:
-				DATA = '<h3>You have not groups</h3>'
+				DATA = '<h3>You have no groups</h3>'
 			ASIDE = """<h2>What is it?</h2>
 				<p>Your groups are listed here. Whatever shows up are groups you have either created or been invited to.</p>
 				<h2 style="margin-top: 15px;">How does it work?</h2>

@@ -16,9 +16,7 @@ try:
 		DATA = """<h1>Welcome, {}!</h1>
 			<p align="center">Your email: {}</p>
 			<p align="center"><a href="{}">change name</a> | <a href="{}">change password</a></p>
-			<p align="center"><a href="/signout.py"><br/>Sign out</a></p>""".format(
-					sshttp.build_redirect_uri('/getacc.py', '/updateacc.py?changename=1'),
-					sshttp.build_redirect_uri('/getacc.py', '/updateacc.py?changepassword=1'))
+			<p align="center"><a href="/signout.py"><br/>Sign out</a></p>"""
 		ASIDE = """<h2>What is it?</h2>
 			<p>Secret santa registration and group planner.</p>
 			<h2 style="margin-top: 15px;">How does it work?</h2>
@@ -27,7 +25,9 @@ try:
 
 		user = sessions.get_user()
 		DATA = DATA.format(userstable.USERS_SCHEMA.get(user, 'name'),
-				userstable.USERS_SCHEMA.get(user, 'email'))
+				userstable.USERS_SCHEMA.get(user, 'email'),
+				sshttp.build_redirect_uri('/getacc.py', '/updateacc.py?changename=1'),
+				sshttp.build_redirect_uri('/getacc.py', '/updateacc.py?changepassword=1'))
 
 		replace = {
 			'desktopNavLinks' : sshtml.buildDesktopNavLinks('Account'),
